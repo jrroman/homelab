@@ -10,19 +10,19 @@ remote_access: "Remote Access" {
 
 homelab: "Homelab Network" {
     proxmox_host: "Proxmox Host" {
-        pcie_nic0: "NIC0 (WAN)"
-        pcie_nic1: "NIC1 (LAN)"
+        pcie_nic0: "NIC0 (WAN) → vmbr0"
+        pcie_nic1: "NIC1 (LAN) → vmbr1"
         storage: "Local NVMe / SSD"
         vms: "Proxmox VM's" {
-            pfsense: "pfSense (Router/Firewall)"
-            pihole: "Piehole (DNS/Adblocker)"
+            pfsense: "pfSense (Router/Firewall)\n- DHCP, NAT, DNS Forwarding"
+            pihole: "Pi-hole (DNS/Adblocker)"
             vpn: "Wireguard VPN"
             k8s1: "Kubernetes Node 1"
-            k8s2: "Kubernetes Node 1"
+            k8s2: "Kubernetes Node 2"
         }
     }
 
-    udr: Dream Router 7
+    udr: "Dream Router 7 (AP Mode Only)"
 
     net: "Networks" {
         wan: "WAN (External)"
@@ -35,24 +35,32 @@ homelab: "Homelab Network" {
         cimulate_osx: "Cimulate Macbook"
         personal_osx: "Personal Macbook"
         thinkpad_debian: "IBM Thinkpad Debian"
-        john_ios: "John's Iphone"
-        javi_ios: "Javi's Iphone"
+        john_ios: "John's iPhone"
+        javi_ios: "Javi's iPhone"
         javi_laptop: "Javi's Work Laptop"
+    }
+
+    firewall_boundary: "Firewall Boundary" {
+        style.stroke-dash: 5
+        style.opacity: 0.3
+        contains: proxmox_host.vms.pfsense, net.lan, net.vpn, lan_devices, udr
     }
 }
 
-building.wan_port -> homelab.proxmox_host.pcie_nic0: "Building Ethernet -> WAN"
+building.wan_port -> homelab.proxmox_host.pcie_nic0: "Building Ethernet → WAN"
 
-homelab.proxmox_host.pcie_nic0 -> homelab.proxmox_host.vms.pfsense: "WAN (bridged)"
-homelab.proxmox_host.pcie_nic1 -> homelab.proxmox_host.vms.pfsense: "LAN (bridged)"
-homelab.proxmox_host.pcie_nic1 -> homelab.udr: "LAN NIC to UDR"
-homelab.proxmox_host.vms.pfsense -> homelab.net.lan: "DHCP + NAT + DNS"
-homelab.udr -> homelab.lan_devices: "WiFi + Wired"
-homelab.lan_devices -> homelab.net.lan: "Access Home Services"
+homelab.proxmox_host.pcie_nic0 -> homelab.proxmox_host.vms.pfsense: "vmbr0 → WAN (bridged)"
+homelab.proxmox_host.pcie_nic1 -> homelab.proxmox_host.vms.pfsense: "vmbr1 → LAN (bridged)"
+homelab.proxmox_host.pcie_nic1 -> homelab.udr: "LAN NIC → UDR"
+
+homelab.proxmox_host.vms.pfsense -> homelab.net.lan: "DHCP, NAT, DNS → LAN"
 homelab.proxmox_host.vms.pihole -> homelab.net.lan: "DNS Filtering"
-homelab.proxmox_host.vms.pfsense -> homelab.net.vpn
-remote_access.wg_client -> homelab.proxmox_host.vms.pfsense: "Connects via WireGuard (UDP 51820)"
-homelab.proxmox_host.vms.pfsense -> homelab.net.vpn: "Terminates VPN tunnel"
-homelab.net.vpn -> homelab.net.lan: "VPN subnet routes to LAN"
-homelab.net.vpn -> homelab.proxmox_host.vms.k8s1: "Access K8s services"
-homelab.net.vpn -> homelab.lan_devices: "Optional: Access other LAN devices"
+homelab.udr -> homelab.lan_devices: "WiFi + Ethernet"
+
+homelab.lan_devices -> homelab.net.lan: "LAN Clients Access Services"
+homelab.proxmox_host.vms.pfsense -> homelab.net.vpn: "VPN Termination"
+remote_access.wg_client -> homelab.proxmox_host.vms.pfsense: "WireGuard Tunnel (UDP 51820)"
+homelab.net.vpn -> homelab.net.lan: "Route VPN to LAN"
+homelab.net.vpn -> homelab.lan_devices: "Optional: Remote Device Access"
+homelab.net.vpn -> homelab.proxmox_host.vms.k8s1: "Access K8s Services"
+
