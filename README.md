@@ -7,7 +7,7 @@ Our network here at the Robeson street apartment is fast however it feels incred
 	- Need to figure out what hardware would be appropriate to run pfSense. I know it can also be run in a virtualized manner.
 	- Since I have a motherboard, cpu, gpu, power supply, cpu cooler hanging around it might make the most sense to build a small PC which can run proxmox, pfSense, pihole, kubernetes etc.. The only thing i would need is an additional NIC, looking at the [Intel I350-T2 dual-port NIC](https://www.amazon.com/Ethernet-Server-Adapter-I350-T2-Full-height/dp/B005ATA16Y).
 - [ubiquiti / unifi](https://ui.com/)
-	- [Dream router 7](https://store.ui.com/us/en/category/all-wifi/products/udr7) to live behind whatever pfSense hardware I end up going with.
+	- [Dream router 7](https://store.ui.com/us/en/category/all-wifi/products/udr7) to live behind whatever pfSense hardware I end up going with. If I go with the UDR 7 I wont really be using it's router functionality at all I would be running it in bride mode and using it strictly as an access point.
 	- Once more network design is done it will be important to think through switches, VLAN's, and additional access points.
 
 ##### Rough High Level Setup
