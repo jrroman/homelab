@@ -1,0 +1,58 @@
+direction: right
+
+building: "Building Internet Connection" {
+    wan_port: "Ethernet Wall Jack (DHCP)"
+}
+
+remote_access: "Remote Access" {
+    wg_client: "Wireguard Client"
+}
+
+homelab: "Homelab Network" {
+    proxmox_host: "Proxmox Host" {
+        pcie_nic0: "NIC0 (WAN)"
+        pcie_nic1: "NIC1 (LAN)"
+        storage: "Local NVMe / SSD"
+        vms: "Proxmox VM's" {
+            pfsense: "pfSense (Router/Firewall)"
+            pihole: "Piehole (DNS/Adblocker)"
+            vpn: "Wireguard VPN"
+            k8s1: "Kubernetes Node 1"
+            k8s2: "Kubernetes Node 1"
+        }
+    }
+
+    udr: Dream Router 7
+
+    net: "Networks" {
+        wan: "WAN (External)"
+        lan: "LAN (192.168.10.0/24)"
+        vpn: "VPN (10.6.0.0/24 - Wireguard)"
+    }
+
+    lan_devices: "LAN Clients" {
+        gaming_desktop: "Windows 11 Desktop"
+        cimulate_osx: "Cimulate Macbook"
+        personal_osx: "Personal Macbook"
+        thinkpad_debian: "IBM Thinkpad Debian"
+        john_ios: "John's Iphone"
+        javi_ios: "Javi's Iphone"
+        javi_laptop: "Javi's Work Laptop"
+    }
+}
+
+building.wan_port -> homelab.proxmox_host.pcie_nic0: "Building Ethernet -> WAN"
+
+homelab.proxmox_host.pcie_nic0 -> homelab.proxmox_host.vms.pfsense: "WAN (bridged)"
+homelab.proxmox_host.pcie_nic1 -> homelab.proxmox_host.vms.pfsense: "LAN (bridged)"
+homelab.proxmox_host.pcie_nic1 -> homelab.udr: "LAN NIC to UDR"
+homelab.proxmox_host.vms.pfsense -> homelab.net.lan: "DHCP + NAT + DNS"
+homelab.udr -> homelab.lan_devices: "WiFi + Wired"
+homelab.lan_devices -> homelab.net.lan: "Access Home Services"
+homelab.proxmox_host.vms.pihole -> homelab.net.lan: "DNS Filtering"
+homelab.proxmox_host.vms.pfsense -> homelab.net.vpn
+remote_access.wg_client -> homelab.proxmox_host.vms.pfsense: "Connects via WireGuard (UDP 51820)"
+homelab.proxmox_host.vms.pfsense -> homelab.net.vpn: "Terminates VPN tunnel"
+homelab.net.vpn -> homelab.net.lan: "VPN subnet routes to LAN"
+homelab.net.vpn -> homelab.proxmox_host.vms.k8s1: "Access K8s services"
+homelab.net.vpn -> homelab.lan_devices: "Optional: Access other LAN devices"
